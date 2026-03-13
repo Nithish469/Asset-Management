@@ -25,13 +25,12 @@ const Assets = () => {
 const [assets,setAssets] = useState([]);
 const [open,setOpen] = useState(false);
 const [editId,setEditId] = useState(null);
-
+const [statusFilter,setStatusFilter]=useState("all");
 const [search,setSearch] = useState("");
 const [page,setPage] = useState(0);
 const [rowsPerPage,setRowsPerPage] = useState(5);
 
 const [formData,setFormData] = useState({
-asset_id:"",
 asset_name:"",
 asset_type:"",
 po_number:"",
@@ -58,8 +57,8 @@ headers:{Authorization:`Bearer ${token}`}
 );
 
 setAssets(res.data);
-
 };
+
 
 const handleOpen = ()=>{
 setOpen(true);
@@ -70,7 +69,6 @@ setOpen(false);
 setEditId(null);
 
 setFormData({
-asset_id:"",
 asset_name:"",
 asset_type:"",
 po_number:"",
@@ -80,7 +78,6 @@ warranty_start:"",
 warranty_end:"",
 status:"available"
 });
-
 };
 
 const handleChange = (e)=>{
@@ -89,6 +86,7 @@ setFormData({
 [e.target.name]:e.target.value
 });
 };
+
 
 const handleSubmit = async()=>{
 
@@ -118,14 +116,15 @@ headers:{Authorization:`Bearer ${token}`}
 
 fetchAssets();
 handleClose();
-
 };
+
 
 const handleEdit = (asset)=>{
 setEditId(asset.id);
 setFormData(asset);
 setOpen(true);
 };
+
 
 const handleDelete = async(id)=>{
 
@@ -139,16 +138,28 @@ headers:{Authorization:`Bearer ${token}`}
 );
 
 fetchAssets();
-
 };
 
-const filteredAssets = assets.filter((asset)=>
+
+
+
+/* SEARCH + STATUS FILTER */
+
+const filteredAssets = assets.filter((asset)=>{
+
+const matchesSearch =
 asset.asset_name?.toLowerCase().includes(search.toLowerCase()) ||
 asset.asset_type?.toLowerCase().includes(search.toLowerCase()) ||
 asset.asset_id?.toLowerCase().includes(search.toLowerCase()) ||
-asset.po_number?.toLowerCase().includes(search.toLowerCase()) ||
-asset.status?.toLowerCase().includes(search.toLowerCase())
-);
+asset.po_number?.toLowerCase().includes(search.toLowerCase());
+
+const matchesStatus =
+statusFilter === "all" || asset.status === statusFilter;
+
+return matchesSearch && matchesStatus;
+
+});
+
 
 return(
 
@@ -167,13 +178,30 @@ Add Asset
 <br/><br/>
 
 <TextField
+select
+label="Filter by Status"
+value={statusFilter}
+onChange={(e)=>setStatusFilter(e.target.value)}
+style={{marginRight:"20px",width:"200px"}}
+SelectProps={{ native: true }}
+>
+
+<option value="all">All</option>
+<option value="available">Available</option>
+<option value="assigned">Assigned</option>
+
+</TextField>
+
+
+<TextField
 label="Search Assets"
 variant="outlined"
 size="small"
 value={search}
 onChange={(e)=>setSearch(e.target.value)}
-style={{marginBottom:"15px"}}
 />
+
+
 
 <Table>
 
@@ -190,9 +218,11 @@ style={{marginBottom:"15px"}}
 <TableCell>Warranty End</TableCell>
 <TableCell>Status</TableCell>
 <TableCell>Actions</TableCell>
+
 </TableRow>
 
 </TableHead>
+
 
 <TableBody>
 
@@ -202,7 +232,6 @@ style={{marginBottom:"15px"}}
 
 <TableRow key={asset.id}>
 
-
 <TableCell>{asset.asset_id}</TableCell>
 <TableCell>{asset.asset_name}</TableCell>
 <TableCell>{asset.asset_type}</TableCell>
@@ -210,7 +239,15 @@ style={{marginBottom:"15px"}}
 <TableCell>{asset.asset_value}</TableCell>
 <TableCell>{asset.warranty_start}</TableCell>
 <TableCell>{asset.warranty_end}</TableCell>
-<TableCell>{asset.status}</TableCell>
+
+<TableCell
+style={{
+color: asset.status === "available" ? "green" : "orange",
+fontWeight:"bold"
+}}
+>
+{asset.status}
+</TableCell>
 
 <TableCell>
 
@@ -238,6 +275,8 @@ onClick={()=>handleDelete(asset.id)}
 
 </Table>
 
+
+
 <TablePagination
 component="div"
 count={filteredAssets.length}
@@ -251,15 +290,16 @@ setPage(0);
 rowsPerPageOptions={[5,10,20]}
 />
 
+
+
 <Dialog open={open} onClose={handleClose}>
 
 <DialogTitle>
 {editId ? "Edit Asset" : "Add Asset"}
 </DialogTitle>
 
+
 <DialogContent>
-
-
 
 <TextField
 label="Asset Name"
@@ -340,6 +380,7 @@ onChange={handleChange}
 />
 
 </DialogContent>
+
 
 <DialogActions>
 
