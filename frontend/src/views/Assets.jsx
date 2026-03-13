@@ -237,8 +237,8 @@ onChange={(e)=>setSearch(e.target.value)}
 <TableCell>{asset.asset_type}</TableCell>
 <TableCell>{asset.po_number}</TableCell>
 <TableCell>{asset.asset_value}</TableCell>
-<TableCell>{asset.warranty_start}</TableCell>
-<TableCell>{asset.warranty_end}</TableCell>
+<TableCell>{asset.warranty_start?.split("T")[0]}</TableCell>
+<TableCell>{asset.warranty_end?.split("T")[0]}</TableCell>
 
 <TableCell
 style={{
